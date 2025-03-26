@@ -116,6 +116,7 @@
       cursor: grab;
       transition: transform 0.2s ease;
       position: relative;
+      touch-action: none;
     }
     .item:hover::after {
       content: attr(data-label);
@@ -147,6 +148,7 @@
       justify-content: center;
       background-color: var(--neutral);
       position: relative;
+      touch-action: none;
     }
     /* Slideshow container for final screen */
     .slideshow-container {
@@ -233,11 +235,15 @@
   <!-- Audio placeholders: Replace the src URLs if needed -->
   <audio id="audio-correct" src="happi.mp3"></audio>
   <audio id="audio-wrong" src="boo-sound.mp3"></audio>
-  <audio id="audio-sad" src="sadcatspund.mp3"></audio>
+  <!-- Removed audio-sad -->
   <!-- Final sound loops continuously -->
   <audio id="audio-final" src="iseetree.mp3" loop></audio>
 
   <script>
+    // Global variable for touch dragging
+    let currentTouchItem = null;
+    let touchOffset = { x: 0, y: 0 };
+
     // Quiz Data
     const quizData = [
       {
@@ -304,7 +310,7 @@
       {
         type: 'quiz',
         header: 'I don’t think Prachi needs any of this materialism, the only thing she needs is a big smile!',
-        photo: '', // No photo in drop zone for this step
+        photo: '', // no drop zone image initially
         progress: 'Step 5 of 5',
         enlargeOnDrop: true,
         items: [
@@ -381,6 +387,47 @@
       }, 3000);
     }
 
+    // Add touch support for draggable items (mobile)
+    function addTouchEvents(itemDiv) {
+      itemDiv.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        currentTouchItem = itemDiv;
+        const rect = itemDiv.getBoundingClientRect();
+        touchOffset.x = e.touches[0].clientX - rect.left;
+        touchOffset.y = e.touches[0].clientY - rect.top;
+        itemDiv.style.position = 'absolute';
+        itemDiv.style.zIndex = '1000';
+      }, {passive: false});
+
+      itemDiv.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (!currentTouchItem) return;
+        currentTouchItem.style.left = (e.touches[0].clientX - touchOffset.x) + 'px';
+        currentTouchItem.style.top = (e.touches[0].clientY - touchOffset.y) + 'px';
+      }, {passive: false});
+
+      itemDiv.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        if (!currentTouchItem) return;
+        // Check if dropped over drop zone
+        const dropZone = document.getElementById('drop-zone');
+        const dzRect = dropZone.getBoundingClientRect();
+        const touchX = e.changedTouches[0].clientX;
+        const touchY = e.changedTouches[0].clientY;
+        if (touchX > dzRect.left && touchX < dzRect.right &&
+            touchY > dzRect.top && touchY < dzRect.bottom) {
+          // Simulate drop event
+          handleDrop(currentTouchItem.id, dropZone, quizData[currentStep]);
+        }
+        // Reset position
+        currentTouchItem.style.position = '';
+        currentTouchItem.style.zIndex = '';
+        currentTouchItem.style.left = '';
+        currentTouchItem.style.top = '';
+        currentTouchItem = null;
+      }, {passive: false});
+    }
+
     // Render current step
     function renderStep() {
       gameContainer.innerHTML = '';
@@ -394,11 +441,8 @@
         gameContainer.appendChild(progressEl);
       }
 
-      // For quiz steps with "sad" in header, play the sad audio once
-      if (step.type === 'quiz' && step.header.toLowerCase().includes("sad")) {
-        document.getElementById('audio-sad').play();
-      }
-
+      // (Removed sad audio)
+      
       if (step.type === 'instructions') {
         const header = document.createElement('h1');
         header.textContent = step.header;
@@ -443,7 +487,7 @@
         const header = document.createElement('h2');
         header.textContent = step.header;
         gameContainer.appendChild(header);
-        // Create drop zone with border and contained image
+        // Create drop zone
         const dropZone = document.createElement('div');
         dropZone.id = 'drop-zone';
         dropZone.addEventListener('dragover', (e) => e.preventDefault());
@@ -452,7 +496,7 @@
           const itemId = e.dataTransfer.getData('text/plain');
           handleDrop(itemId, dropZone, step);
         });
-        // For the "big smile" quiz, no drop zone image
+        // For the "big smile" quiz, no image; show placeholder text.
         if (step.header.toLowerCase().includes("big smile")) {
           dropZone.textContent = "Drop Smile Here";
         } else {
@@ -483,6 +527,8 @@
           itemDiv.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', item.id);
           });
+          // Add touch events for mobile drag
+          addTouchEvents(itemDiv);
           const itemImg = document.createElement('img');
           itemImg.src = item.img;
           itemImg.alt = item.label;
@@ -539,13 +585,30 @@
             setTimeout(() => img.style.transform = 'scale(1)', 300);
           }
         }
-        showConfetti();
+        // Extra creative touch: show a quick "Boom! You got it!" message
+        const boomMsg = document.createElement('p');
+        boomMsg.textContent = "Boom! You got it!";
+        boomMsg.style.color = var(--primary);
+        boomMsg.style.fontWeight = "bold";
+        gameContainer.appendChild(boomMsg);
+        setTimeout(() => {
+          if (boomMsg.parentNode) {
+            boomMsg.parentNode.removeChild(boomMsg);
+          }
+        }, 1000);
+        // For the big smile quiz, update drop zone to show happyone.png
+        if (step.header.toLowerCase().includes("big smile")) {
+          dropZone.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = 'happyone.png';
+          img.className = 'photo';
+          dropZone.appendChild(img);
+        }
         setTimeout(() => {
           transitionToNext(() => { currentStep++; renderStep(); });
         }, transitionDelay);
       } else {
         document.getElementById('audio-wrong').play();
-        // Update popup message depending on the step
         if (step.header.toLowerCase().includes("cocaine")) {
           popupMessage.textContent = "Bitch I don't do cocaine.";
         } else {
@@ -558,7 +621,6 @@
     // Popup Continue Button
     popupBtn.addEventListener('click', () => {
       popupModal.style.display = 'none';
-      // For the cocaine quiz, always move forward after the popup.
       if (quizData[currentStep].header.toLowerCase().includes("cocaine")) {
         transitionToNext(() => { currentStep++; renderStep(); });
       } else {
