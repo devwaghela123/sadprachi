@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prachi's Smile Quiz</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -149,6 +150,17 @@
       height: 100%;
       z-index: 9999;
     }
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      #drop-zone {
+        width: 90%;
+        height: auto;
+        padding: 10px;
+      }
+      .items-container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -164,7 +176,7 @@
     </div>
   </div>
   
-  <!-- Audio placeholders -->
+  <!-- Audio placeholders: Replace the src URLs with your own sound files -->
   <audio id="audio-correct" src="your-correct-sound.mp3"></audio>
   <audio id="audio-wrong" src="your-wrong-sound.mp3"></audio>
   <audio id="audio-final" src="your-final-sound.mp3"></audio>
@@ -209,7 +221,7 @@
         ]
       },
       {
-        // Quiz 4: Cocaine quiz with only one option that always triggers the wrong popup
+        // Cocaine quiz: even though it's wrong, we still move forward.
         type: 'quiz',
         header: 'Maybe cocaine?',
         photo: 'https://via.placeholder.com/300x200?text=Prachi+??',
@@ -219,8 +231,9 @@
         ]
       },
       {
+        // Big smile quiz
         type: 'quiz',
-        header: 'The only thing she needs is a big smile!',
+        header: 'I don’t think Prachi needs any of this materialism, the only thing she needs is a big smile!',
         photo: 'https://via.placeholder.com/300x200?text=Prachi+Neutral',
         enlargeOnDrop: true,
         items: [
@@ -228,6 +241,7 @@
         ]
       },
       {
+        // Final: Slideshow with dogs and cats
         type: 'final',
         slideshowPhotos: [
           'https://via.placeholder.com/300x200?text=Dog+with+Rose',
@@ -244,7 +258,7 @@
     const popupModal = document.getElementById('popup-modal');
     const popupBtn = document.getElementById('popup-btn');
 
-    // Clear container
+    // Clear container content
     function clearContainer() {
       gameContainer.innerHTML = '';
     }
@@ -384,15 +398,18 @@
           renderStep();
         }, 600);
       } else {
-        // Play wrong sound and show modal popup
         document.getElementById('audio-wrong').play();
         popupModal.style.display = 'flex';
       }
     }
 
-    // Popup Continue Button resets same quiz step
+    // Popup Continue Button
     popupBtn.addEventListener('click', () => {
       popupModal.style.display = 'none';
+      // If current step is the cocaine quiz, move forward regardless of wrong answer.
+      if (quizData[currentStep].header.toLowerCase().includes("cocaine")) {
+        currentStep++;
+      }
       renderStep();
     });
 
