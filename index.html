@@ -441,8 +441,6 @@
         gameContainer.appendChild(progressEl);
       }
 
-      // (Removed sad audio)
-      
       if (step.type === 'instructions') {
         const header = document.createElement('h1');
         header.textContent = step.header;
@@ -588,7 +586,7 @@
         // Extra creative touch: show a quick "Boom! You got it!" message
         const boomMsg = document.createElement('p');
         boomMsg.textContent = "Boom! You got it!";
-        boomMsg.style.color = var(--primary);
+        boomMsg.style.color = "var(--primary)"; /* <-- FIXED HERE */
         boomMsg.style.fontWeight = "bold";
         gameContainer.appendChild(boomMsg);
         setTimeout(() => {
