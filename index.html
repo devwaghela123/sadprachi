@@ -197,103 +197,106 @@
   <!-- Popup Modal -->
   <div id="popup-modal">
     <div id="popup-content">
-      <img src="https://via.placeholder.com/300x200?text=Annoyed+Prachi" alt="Annoyed Prachi">
+      <img src="annoyedone.jpeg" alt="Annoyed Prachi">
       <h3>You did it wrong, bitch! Get her the right stuff, try again!</h3>
       <button id="popup-btn">Continue</button>
     </div>
   </div>
   
-  <!-- Audio placeholders: Replace the src URLs with your own sound files -->
-  <audio id="audio-correct" src="your-correct-sound.mp3"></audio>
-  <audio id="audio-wrong" src="your-wrong-sound.mp3"></audio>
-  <!-- Final sound loops -->
-  <audio id="audio-final" src="your-final-sound.mp3" loop></audio>
+  <!-- Audio placeholders: Replace the src URLs if needed -->
+  <audio id="audio-correct" src="happi.mp3"></audio>
+  <audio id="audio-wrong" src="boo-sound.mp3"></audio>
+  <audio id="audio-sad" src="sadcatspund.mp3"></audio>
+  <!-- Final sound loops continuously -->
+  <audio id="audio-final" src="iseetree.mp3" loop></audio>
 
   <script>
     // Quiz Data
     const quizData = [
       {
+        type: 'instructions',
+        header: 'How to Play',
+        message: 'Drag and drop the correct item onto Prachi’s picture using your mouse or finger. Your mission: make her smile!',
+        buttonText: 'Got it, Let\'s Go!'
+      },
+      {
         type: 'start',
         header: 'Welcome to Prachi\'s Smile Quiz',
-        message: 'Hit "Start Game" to begin!',
+        message: 'Press "Start Game" to begin.',
         buttonText: 'Start Game'
       },
       {
         type: 'intro',
-        photo: 'https://via.placeholder.com/300x200?text=This+is+Prachi',
-        message: 'There\'s a problem... she isn’t smiling much. Let\'s fix that with a fun quiz!',
+        photo: 'basephoto.png',
+        message: 'This is Prachi... but there’s a problem: she isn’t smiling much. Let’s fix that with a fun quiz!',
         buttonText: 'Start Quiz'
       },
       {
         type: 'quiz',
         header: 'She is really sad right now',
-        photo: 'https://via.placeholder.com/300x200?text=Sad+Prachi',
+        photo: 'sadone.jpeg',
         progress: 'Step 1 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item1', label: 'Water', img: 'https://via.placeholder.com/100?text=Water', correct: false },
-          { id: 'item2', label: 'Rookie Coffee', img: 'https://via.placeholder.com/100?text=Rookie+Coffee', correct: true }
+          { id: 'item1', label: 'Water', img: 'image (23).png', correct: false },
+          { id: 'item2', label: 'Rookie Coffee', img: 'image (24).png', correct: true }
         ]
       },
       {
         type: 'quiz',
         header: 'She is really sad right now',
-        photo: 'https://via.placeholder.com/300x200?text=Sad+Prachi',
+        photo: 'sadtwo.jpeg',
         progress: 'Step 2 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item3', label: 'Waffles', img: 'https://via.placeholder.com/100?text=Waffles', correct: true },
-          { id: 'item4', label: 'Donuts', img: 'https://via.placeholder.com/100?text=Donuts', correct: false }
+          { id: 'item3', label: 'Waffles', img: 'image (27).png', correct: true },
+          { id: 'item4', label: 'Donuts', img: 'image (28).png', correct: false }
         ]
       },
       {
         type: 'quiz',
         header: 'A freaky mood!',
-        photo: 'https://via.placeholder.com/300x200?text=Sad+Prachi',
+        photo: 'sadone.jpeg',
         progress: 'Step 3 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item5', label: 'Unicorn Tears', img: 'https://via.placeholder.com/100?text=Unicorn+Tears', correct: false },
-          { id: 'item6', label: 'Glitter Bomb', img: 'https://via.placeholder.com/100?text=Glitter+Bomb', correct: true }
+          { id: 'item5', label: 'Unicorn Tears', img: 'image (26).png', correct: false },
+          { id: 'item6', label: 'Glitter Bomb', img: 'image (25).png', correct: true }
         ]
       },
       {
-        // Cocaine quiz: even though it's wrong, we still move forward.
         type: 'quiz',
         header: 'Maybe cocaine?',
-        photo: 'https://via.placeholder.com/300x200?text=Prachi+??',
+        photo: 'drugs.jpeg',
         progress: 'Step 4 of 5',
         enlargeOnDrop: false,
         items: [
-          { id: 'item7', label: 'Cocaine', img: 'https://via.placeholder.com/100?text=Cocaine', correct: false }
+          { id: 'item7', label: 'Cocaine', img: 'image (29).png', correct: false }
         ]
       },
       {
-        // Big smile quiz
         type: 'quiz',
         header: 'I don’t think Prachi needs any of this materialism, the only thing she needs is a big smile!',
-        photo: 'https://via.placeholder.com/300x200?text=Prachi+Neutral',
+        photo: 'sadone.jpeg',
         progress: 'Step 5 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item8', label: 'Smile', img: 'https://via.placeholder.com/100?text=Smile', correct: true }
+          { id: 'item8', label: 'Smile', img: 'happyone.png', correct: true }
         ]
       },
       {
-        // Smiling Prachi screen: after correct smile answer
         type: 'smile',
-        photo: 'https://via.placeholder.com/300x200?text=Prachi+Smiling',
+        photo: 'happyone.png',
         buttonText: 'One Final Message'
       },
       {
-        // Final: Slideshow with dogs and cats and looping final sound
         type: 'final',
         message: 'No materialism, just a big smile :)',
         slideshowPhotos: [
           'dogrose.jpeg',
           'dog.jpeg',
-          'cat.jpeg',
-          'cat1.jpeg'
+          'cat1.jpeg',
+          'cat.jpeg'
         ]
       }
     ];
@@ -302,7 +305,7 @@
     const gameContainer = document.getElementById('game-container');
     const popupModal = document.getElementById('popup-modal');
     const popupBtn = document.getElementById('popup-btn');
-    const transitionDelay = 2500; // 2.5 seconds
+    const transitionDelay = 2500; // 2.5 seconds for right/wrong sounds
 
     // Utility: fade out then callback to render new content
     function transitionToNext(callback) {
@@ -363,13 +366,31 @@
         gameContainer.appendChild(progressEl);
       }
 
-      if (step.type === 'start') {
+      // Play the sad audio if header indicates sadness
+      if (step.type === 'quiz' && step.header.toLowerCase().includes("sad")) {
+        document.getElementById('audio-sad').play();
+      }
+
+      if (step.type === 'instructions') {
         const header = document.createElement('h1');
         header.textContent = step.header;
         gameContainer.appendChild(header);
-        const message = document.createElement('p');
-        message.textContent = step.message;
-        gameContainer.appendChild(message);
+        const msg = document.createElement('p');
+        msg.textContent = step.message;
+        gameContainer.appendChild(msg);
+        const btn = document.createElement('button');
+        btn.textContent = step.buttonText;
+        btn.addEventListener('click', () => {
+          transitionToNext(() => { currentStep++; renderStep(); });
+        });
+        gameContainer.appendChild(btn);
+      } else if (step.type === 'start') {
+        const header = document.createElement('h1');
+        header.textContent = step.header;
+        gameContainer.appendChild(header);
+        const msg = document.createElement('p');
+        msg.textContent = step.message;
+        gameContainer.appendChild(msg);
         const btn = document.createElement('button');
         btn.textContent = step.buttonText;
         btn.addEventListener('click', () => {
@@ -472,14 +493,9 @@
           img.style.transform = 'scale(1.2)';
           setTimeout(() => img.style.transform = 'scale(1)', 300);
         }
-        // Add confetti for extra flair
         showConfetti();
-        // Delay transition to allow sound to finish (2.5s)
         setTimeout(() => {
-          transitionToNext(() => {
-            currentStep++;
-            renderStep();
-          });
+          transitionToNext(() => { currentStep++; renderStep(); });
         }, transitionDelay);
       } else {
         document.getElementById('audio-wrong').play();
@@ -490,11 +506,10 @@
     // Popup Continue Button
     popupBtn.addEventListener('click', () => {
       popupModal.style.display = 'none';
-      // If current step is the cocaine quiz, move forward regardless.
+      // For the cocaine quiz, always move forward after the popup.
       if (quizData[currentStep].header.toLowerCase().includes("cocaine")) {
         transitionToNext(() => { currentStep++; renderStep(); });
       } else {
-        // For other wrong answers, simply re-render same step.
         transitionToNext(() => { renderStep(); });
       }
     });
