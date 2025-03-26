@@ -87,6 +87,7 @@
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       margin-bottom: 20px;
+      object-fit: contain;
       transition: transform 0.3s ease;
     }
     /* Items container */
@@ -126,6 +127,7 @@
     .item img {
       width: 80%;
       border-radius: 4px;
+      object-fit: contain;
     }
     /* Drop zone styling */
     #drop-zone {
@@ -139,6 +141,24 @@
       justify-content: center;
       background-color: var(--neutral);
       position: relative;
+    }
+    /* Slideshow container for final screen */
+    .slideshow-container {
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      border: 3px dashed var(--primary);
+      border-radius: 12px;
+      background-color: var(--neutral);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .slideshow-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     /* Modal Popup for Wrong Answer */
     #popup-modal {
@@ -166,6 +186,7 @@
       max-width: 300px;
       border-radius: 8px;
       margin-bottom: 15px;
+      object-fit: contain;
     }
     /* Confetti canvas */
     #confetti-canvas {
@@ -179,7 +200,7 @@
     }
     /* Responsive tweaks */
     @media (max-width: 600px) {
-      #drop-zone {
+      #drop-zone, .slideshow-container {
         width: 90%;
         height: auto;
         padding: 10px;
@@ -277,7 +298,7 @@
       {
         type: 'quiz',
         header: 'I don’t think Prachi needs any of this materialism, the only thing she needs is a big smile!',
-        photo: 'sadone.jpeg',
+        photo: '', // Remove drop zone image for this step
         progress: 'Step 5 of 5',
         enlargeOnDrop: true,
         items: [
@@ -305,7 +326,7 @@
     const gameContainer = document.getElementById('game-container');
     const popupModal = document.getElementById('popup-modal');
     const popupBtn = document.getElementById('popup-btn');
-    const transitionDelay = 2500; // 2.5 seconds for right/wrong sounds
+    const transitionDelay = 2500; // 2.5 seconds delay
 
     // Utility: fade out then callback to render new content
     function transitionToNext(callback) {
@@ -366,7 +387,7 @@
         gameContainer.appendChild(progressEl);
       }
 
-      // Play the sad audio if header indicates sadness
+      // If this is a quiz step with "sad" header, play the sad audio
       if (step.type === 'quiz' && step.header.toLowerCase().includes("sad")) {
         document.getElementById('audio-sad').play();
       }
@@ -415,6 +436,7 @@
         const header = document.createElement('h2');
         header.textContent = step.header;
         gameContainer.appendChild(header);
+        // Create drop zone
         const dropZone = document.createElement('div');
         dropZone.id = 'drop-zone';
         dropZone.addEventListener('dragover', (e) => e.preventDefault());
@@ -423,10 +445,15 @@
           const itemId = e.dataTransfer.getData('text/plain');
           handleDrop(itemId, dropZone, step);
         });
-        const img = document.createElement('img');
-        img.src = step.photo;
-        img.className = 'photo';
-        dropZone.appendChild(img);
+        // For the "big smile" quiz, do not show an image – just a placeholder text.
+        if (step.header.toLowerCase().includes("big smile")) {
+          dropZone.textContent = "Drop Smile Here";
+        } else {
+          const img = document.createElement('img');
+          img.src = step.photo;
+          img.className = 'photo';
+          dropZone.appendChild(img);
+        }
         gameContainer.appendChild(dropZone);
         // Items container
         const itemsContainer = document.createElement('div');
@@ -449,6 +476,7 @@
         });
         gameContainer.appendChild(itemsContainer);
       } else if (step.type === 'smile') {
+        // Smile screen: show a smiling Prachi image with a button.
         const img = document.createElement('img');
         img.src = step.photo;
         img.className = 'photo';
@@ -463,15 +491,16 @@
         const msg = document.createElement('h2');
         msg.textContent = step.message;
         gameContainer.appendChild(msg);
+        // Create a fixed slideshow container so the message remains visible
         const slideshow = document.createElement('div');
-        slideshow.id = 'slideshow';
+        slideshow.className = 'slideshow-container';
         gameContainer.appendChild(slideshow);
         let idx = 0;
         function updateSlide() {
           slideshow.innerHTML = '';
           const img = document.createElement('img');
           img.src = step.slideshowPhotos[idx];
-          img.className = 'photo';
+          img.alt = "Cute pet";
           slideshow.appendChild(img);
           idx = (idx + 1) % step.slideshowPhotos.length;
         }
@@ -490,8 +519,10 @@
         document.getElementById('audio-correct').play();
         if (step.enlargeOnDrop) {
           const img = dropZone.querySelector('img');
-          img.style.transform = 'scale(1.2)';
-          setTimeout(() => img.style.transform = 'scale(1)', 300);
+          if (img) {
+            img.style.transform = 'scale(1.2)';
+            setTimeout(() => img.style.transform = 'scale(1)', 300);
+          }
         }
         showConfetti();
         setTimeout(() => {
