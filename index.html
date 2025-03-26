@@ -28,6 +28,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      overflow-x: hidden;
     }
     /* Container styling */
     #game-container {
@@ -40,6 +41,12 @@
       padding: 20px;
       box-sizing: border-box;
       text-align: center;
+      position: relative;
+      opacity: 1;
+      transition: opacity 0.8s ease;
+    }
+    .fade-out {
+      opacity: 0;
     }
     h1, h2, h3 {
       font-family: 'Playfair Display', serif;
@@ -50,6 +57,12 @@
     p {
       font-size: 1em;
       line-height: 1.5;
+    }
+    /* Progress Indicator */
+    #progress {
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      color: var(--secondary-text);
     }
     /* Button styling */
     button {
@@ -95,6 +108,20 @@
       justify-content: center;
       cursor: grab;
       transition: transform 0.2s ease;
+      position: relative;
+    }
+    .item:hover::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: var(--contrast);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      white-space: nowrap;
     }
     .item img {
       width: 80%;
@@ -179,45 +206,55 @@
   <!-- Audio placeholders: Replace the src URLs with your own sound files -->
   <audio id="audio-correct" src="your-correct-sound.mp3"></audio>
   <audio id="audio-wrong" src="your-wrong-sound.mp3"></audio>
-  <audio id="audio-final" src="your-final-sound.mp3"></audio>
+  <!-- Final sound loops -->
+  <audio id="audio-final" src="your-final-sound.mp3" loop></audio>
 
   <script>
     // Quiz Data
     const quizData = [
       {
+        type: 'start',
+        header: 'Welcome to Prachi\'s Smile Quiz',
+        message: 'Hit "Start Game" to begin!',
+        buttonText: 'Start Game'
+      },
+      {
         type: 'intro',
-        photo: 'https://via.placeholder.com/300x200?text=This+is+Prachi!',
-        buttonText: 'Move Ahead',
-        message: ''
+        photo: 'https://via.placeholder.com/300x200?text=This+is+Prachi',
+        message: 'There\'s a problem... she isn’t smiling much. Let\'s fix that with a fun quiz!',
+        buttonText: 'Start Quiz'
       },
       {
         type: 'quiz',
-        header: 'She is real sad right now',
+        header: 'She is really sad right now',
         photo: 'https://via.placeholder.com/300x200?text=Sad+Prachi',
+        progress: 'Step 1 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item1', label: 'Water', img: 'https://via.placeholder.com/100?text=Water', correct: true },
-          { id: 'item2', label: 'Waffles', img: 'https://via.placeholder.com/100?text=Waffles', correct: false }
+          { id: 'item1', label: 'Water', img: 'https://via.placeholder.com/100?text=Water', correct: false },
+          { id: 'item2', label: 'Rookie Coffee', img: 'https://via.placeholder.com/100?text=Rookie+Coffee', correct: true }
         ]
       },
       {
         type: 'quiz',
-        header: 'She is real sad right now',
+        header: 'She is really sad right now',
         photo: 'https://via.placeholder.com/300x200?text=Sad+Prachi',
+        progress: 'Step 2 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item3', label: 'Beer', img: 'https://via.placeholder.com/100?text=Beer', correct: false },
-          { id: 'item4', label: 'Waffles', img: 'https://via.placeholder.com/100?text=Waffles', correct: true }
+          { id: 'item3', label: 'Waffles', img: 'https://via.placeholder.com/100?text=Waffles', correct: true },
+          { id: 'item4', label: 'Donuts', img: 'https://via.placeholder.com/100?text=Donuts', correct: false }
         ]
       },
       {
         type: 'quiz',
-        header: 'She is real sad right now',
+        header: 'A freaky mood!',
         photo: 'https://via.placeholder.com/300x200?text=Sad+Prachi',
+        progress: 'Step 3 of 5',
         enlargeOnDrop: true,
         items: [
-          { id: 'item5', label: 'Coffee', img: 'https://via.placeholder.com/100?text=Coffee', correct: true },
-          { id: 'item6', label: 'Water', img: 'https://via.placeholder.com/100?text=Water', correct: false }
+          { id: 'item5', label: 'Unicorn Tears', img: 'https://via.placeholder.com/100?text=Unicorn+Tears', correct: false },
+          { id: 'item6', label: 'Glitter Bomb', img: 'https://via.placeholder.com/100?text=Glitter+Bomb', correct: true }
         ]
       },
       {
@@ -225,6 +262,7 @@
         type: 'quiz',
         header: 'Maybe cocaine?',
         photo: 'https://via.placeholder.com/300x200?text=Prachi+??',
+        progress: 'Step 4 of 5',
         enlargeOnDrop: false,
         items: [
           { id: 'item7', label: 'Cocaine', img: 'https://via.placeholder.com/100?text=Cocaine', correct: false }
@@ -235,21 +273,28 @@
         type: 'quiz',
         header: 'I don’t think Prachi needs any of this materialism, the only thing she needs is a big smile!',
         photo: 'https://via.placeholder.com/300x200?text=Prachi+Neutral',
+        progress: 'Step 5 of 5',
         enlargeOnDrop: true,
         items: [
           { id: 'item8', label: 'Smile', img: 'https://via.placeholder.com/100?text=Smile', correct: true }
         ]
       },
       {
-        // Final: Slideshow with dogs and cats
+        // Smiling Prachi screen: after correct smile answer
+        type: 'smile',
+        photo: 'https://via.placeholder.com/300x200?text=Prachi+Smiling',
+        buttonText: 'One Final Message'
+      },
+      {
+        // Final: Slideshow with dogs and cats and looping final sound
         type: 'final',
+        message: 'No materialism, just a big smile :)',
         slideshowPhotos: [
           'https://via.placeholder.com/300x200?text=Dog+with+Rose',
           'https://via.placeholder.com/300x200?text=Cat+with+Rose',
           'https://via.placeholder.com/300x200?text=Dog+with+Rose+2',
           'https://via.placeholder.com/300x200?text=Cat+with+Rose+2'
-        ],
-        message: 'No materialism, just a big smile :)'
+        ]
       }
     ];
 
@@ -257,10 +302,15 @@
     const gameContainer = document.getElementById('game-container');
     const popupModal = document.getElementById('popup-modal');
     const popupBtn = document.getElementById('popup-btn');
+    const transitionDelay = 2500; // 2.5 seconds
 
-    // Clear container content
-    function clearContainer() {
-      gameContainer.innerHTML = '';
+    // Utility: fade out then callback to render new content
+    function transitionToNext(callback) {
+      gameContainer.classList.add('fade-out');
+      setTimeout(() => {
+        callback();
+        gameContainer.classList.remove('fade-out');
+      }, 800); // 0.8s fade out
     }
 
     // Confetti effect (basic)
@@ -302,30 +352,48 @@
 
     // Render current step
     function renderStep() {
-      clearContainer();
+      gameContainer.innerHTML = '';
       const step = quizData[currentStep];
-      if (step.type === 'intro') {
+
+      // Display progress if applicable
+      if (step.progress) {
+        const progressEl = document.createElement('div');
+        progressEl.id = 'progress';
+        progressEl.textContent = step.progress;
+        gameContainer.appendChild(progressEl);
+      }
+
+      if (step.type === 'start') {
+        const header = document.createElement('h1');
+        header.textContent = step.header;
+        gameContainer.appendChild(header);
+        const message = document.createElement('p');
+        message.textContent = step.message;
+        gameContainer.appendChild(message);
+        const btn = document.createElement('button');
+        btn.textContent = step.buttonText;
+        btn.addEventListener('click', () => {
+          transitionToNext(() => { currentStep++; renderStep(); });
+        });
+        gameContainer.appendChild(btn);
+      } else if (step.type === 'intro') {
         const img = document.createElement('img');
         img.src = step.photo;
         img.className = 'photo';
         gameContainer.appendChild(img);
-
-        const p = document.createElement('p');
-        p.textContent = step.message;
-        gameContainer.appendChild(p);
-
+        const msg = document.createElement('p');
+        msg.textContent = step.message;
+        gameContainer.appendChild(msg);
         const btn = document.createElement('button');
         btn.textContent = step.buttonText;
         btn.addEventListener('click', () => {
-          currentStep++;
-          renderStep();
+          transitionToNext(() => { currentStep++; renderStep(); });
         });
         gameContainer.appendChild(btn);
       } else if (step.type === 'quiz') {
         const header = document.createElement('h2');
         header.textContent = step.header;
         gameContainer.appendChild(header);
-
         const dropZone = document.createElement('div');
         dropZone.id = 'drop-zone';
         dropZone.addEventListener('dragover', (e) => e.preventDefault());
@@ -339,7 +407,6 @@
         img.className = 'photo';
         dropZone.appendChild(img);
         gameContainer.appendChild(dropZone);
-
         // Items container
         const itemsContainer = document.createElement('div');
         itemsContainer.className = 'items-container';
@@ -349,6 +416,7 @@
           itemDiv.draggable = true;
           itemDiv.id = item.id;
           itemDiv.dataset.correct = item.correct;
+          itemDiv.setAttribute('data-label', item.label);
           itemDiv.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', item.id);
           });
@@ -359,6 +427,17 @@
           itemsContainer.appendChild(itemDiv);
         });
         gameContainer.appendChild(itemsContainer);
+      } else if (step.type === 'smile') {
+        const img = document.createElement('img');
+        img.src = step.photo;
+        img.className = 'photo';
+        gameContainer.appendChild(img);
+        const btn = document.createElement('button');
+        btn.textContent = step.buttonText;
+        btn.addEventListener('click', () => {
+          transitionToNext(() => { currentStep++; renderStep(); });
+        });
+        gameContainer.appendChild(btn);
       } else if (step.type === 'final') {
         const msg = document.createElement('h2');
         msg.textContent = step.message;
@@ -393,10 +472,15 @@
           img.style.transform = 'scale(1.2)';
           setTimeout(() => img.style.transform = 'scale(1)', 300);
         }
+        // Add confetti for extra flair
+        showConfetti();
+        // Delay transition to allow sound to finish (2.5s)
         setTimeout(() => {
-          currentStep++;
-          renderStep();
-        }, 600);
+          transitionToNext(() => {
+            currentStep++;
+            renderStep();
+          });
+        }, transitionDelay);
       } else {
         document.getElementById('audio-wrong').play();
         popupModal.style.display = 'flex';
@@ -406,13 +490,16 @@
     // Popup Continue Button
     popupBtn.addEventListener('click', () => {
       popupModal.style.display = 'none';
-      // If current step is the cocaine quiz, move forward regardless of wrong answer.
+      // If current step is the cocaine quiz, move forward regardless.
       if (quizData[currentStep].header.toLowerCase().includes("cocaine")) {
-        currentStep++;
+        transitionToNext(() => { currentStep++; renderStep(); });
+      } else {
+        // For other wrong answers, simply re-render same step.
+        transitionToNext(() => { renderStep(); });
       }
-      renderStep();
     });
 
+    // Initial render
     renderStep();
   </script>
 </body>
