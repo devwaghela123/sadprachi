@@ -90,6 +90,12 @@
       object-fit: contain;
       transition: transform 0.3s ease;
     }
+    /* Ensure images in drop zone are contained */
+    #drop-zone img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+    }
     /* Items container */
     .items-container {
       display: grid;
@@ -219,7 +225,7 @@
   <div id="popup-modal">
     <div id="popup-content">
       <img src="annoyedone.jpeg" alt="Annoyed Prachi">
-      <h3>You did it wrong, bitch! Get her the right stuff, try again!</h3>
+      <h3 id="popup-message">Nah, that's not it. Try again.</h3>
       <button id="popup-btn">Continue</button>
     </div>
   </div>
@@ -237,8 +243,8 @@
       {
         type: 'instructions',
         header: 'How to Play',
-        message: 'Drag and drop the correct item onto Prachi’s picture using your mouse or finger. Your mission: make her smile!',
-        buttonText: 'Got it, Let\'s Go!'
+        message: 'Drag and drop the correct item onto Prachi’s picture using your mouse or finger. Choose wisely.',
+        buttonText: 'Got it, Let’s Go!'
       },
       {
         type: 'start',
@@ -298,7 +304,7 @@
       {
         type: 'quiz',
         header: 'I don’t think Prachi needs any of this materialism, the only thing she needs is a big smile!',
-        photo: '', // Remove drop zone image for this step
+        photo: '', // No photo in drop zone for this step
         progress: 'Step 5 of 5',
         enlargeOnDrop: true,
         items: [
@@ -326,6 +332,7 @@
     const gameContainer = document.getElementById('game-container');
     const popupModal = document.getElementById('popup-modal');
     const popupBtn = document.getElementById('popup-btn');
+    const popupMessage = document.getElementById('popup-message');
     const transitionDelay = 2500; // 2.5 seconds delay
 
     // Utility: fade out then callback to render new content
@@ -350,8 +357,8 @@
           y: Math.random() * canvas.height - canvas.height,
           r: Math.random() * 4 + 1,
           d: Math.random() * 100,
-          color: 'rgba(' + Math.floor(Math.random()*255) + ',' + 
-                 Math.floor(Math.random()*255) + ',' + 
+          color: 'rgba(' + Math.floor(Math.random()*255) + ',' +
+                 Math.floor(Math.random()*255) + ',' +
                  Math.floor(Math.random()*255) + ',1)'
         });
       }
@@ -387,7 +394,7 @@
         gameContainer.appendChild(progressEl);
       }
 
-      // If this is a quiz step with "sad" header, play the sad audio
+      // For quiz steps with "sad" in header, play the sad audio once
       if (step.type === 'quiz' && step.header.toLowerCase().includes("sad")) {
         document.getElementById('audio-sad').play();
       }
@@ -436,7 +443,7 @@
         const header = document.createElement('h2');
         header.textContent = step.header;
         gameContainer.appendChild(header);
-        // Create drop zone
+        // Create drop zone with border and contained image
         const dropZone = document.createElement('div');
         dropZone.id = 'drop-zone';
         dropZone.addEventListener('dragover', (e) => e.preventDefault());
@@ -445,7 +452,7 @@
           const itemId = e.dataTransfer.getData('text/plain');
           handleDrop(itemId, dropZone, step);
         });
-        // For the "big smile" quiz, do not show an image – just a placeholder text.
+        // For the "big smile" quiz, no drop zone image
         if (step.header.toLowerCase().includes("big smile")) {
           dropZone.textContent = "Drop Smile Here";
         } else {
@@ -455,6 +462,14 @@
           dropZone.appendChild(img);
         }
         gameContainer.appendChild(dropZone);
+        // For first quiz, add a hint
+        if (step.progress && step.progress.includes("1 of 5")) {
+          const hint = document.createElement('p');
+          hint.textContent = "Hint: What would she like? hmm water or coffee?";
+          hint.style.fontStyle = "italic";
+          hint.style.marginTop = "10px";
+          gameContainer.appendChild(hint);
+        }
         // Items container
         const itemsContainer = document.createElement('div');
         itemsContainer.className = 'items-container';
@@ -530,6 +545,12 @@
         }, transitionDelay);
       } else {
         document.getElementById('audio-wrong').play();
+        // Update popup message depending on the step
+        if (step.header.toLowerCase().includes("cocaine")) {
+          popupMessage.textContent = "Bitch I don't do cocaine.";
+        } else {
+          popupMessage.textContent = "Nah, that's not it. Try again.";
+        }
         popupModal.style.display = 'flex';
       }
     }
