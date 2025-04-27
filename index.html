@@ -16,7 +16,7 @@
     h2 {
       margin-top: 10px;
     }
-    #sessionForm, #scannerSection {
+    #scannerSection {
       background: white;
       padding: 20px;
       border-radius: 12px;
@@ -25,22 +25,6 @@
       max-width: 400px;
       text-align: center;
       margin-top: 20px;
-    }
-    input, select, button {
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
     }
     #reader {
       width: 100%;
@@ -60,43 +44,16 @@
 <body>
   <h2>Secure Inventory Scanner</h2>
 
-  <!-- Session Start Form -->
-  <div id="sessionForm">
-    <input type="text" id="scannerName" placeholder="Who is scanning? (Your Name)">
-    <input type="text" id="productName" placeholder="What product is being scanned?">
-    <button id="startSessionBtn">Start Scanning</button>
-  </div>
-
-  <!-- Barcode Scanner Section -->
-  <div id="scannerSection" class="hidden">
+  <div id="scannerSection">
     <div id="reader"></div>
     <div id="status"></div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
   <script>
     const securityPrefix = "X9COMP";
     const scannedBarcodes = new Set();
-    const googleScriptURL = "PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE"; // UPDATE THIS!
-
-    let scannerName = "";
-    let productName = "";
-
-    document.getElementById('startSessionBtn').addEventListener('click', () => {
-      scannerName = document.getElementById('scannerName').value.trim();
-      productName = document.getElementById('productName').value.trim();
-
-      if (!scannerName || !productName) {
-        alert('Please fill both fields!');
-        return;
-      }
-
-      document.getElementById('sessionForm').classList.add('hidden');
-      document.getElementById('scannerSection').classList.remove('hidden');
-
-      startScanner();
-    });
+    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyoOG9xAJpZg2uauSq-HcEJeNnRp82735H4GPniwi67RhnEq-m2JfUxSA7bm2ehVjho/exec"; // YOUR Web App URL
 
     function showStatus(message, isSuccess) {
       const statusDiv = document.getElementById('status');
@@ -118,13 +75,13 @@
           const text = result.getText();
           console.log('Scanned:', text);
 
-          if (scannedBarcodes.has(text)) {
-            showStatus("Already Scanned ❌", false);
+          if (!text.startsWith(securityPrefix)) {
+            showStatus("Invalid Barcode ❌", false);
             return;
           }
 
-          if (!text.startsWith(securityPrefix)) {
-            showStatus("Invalid Barcode ❌", false);
+          if (scannedBarcodes.has(text)) {
+            showStatus("Already Scanned This Session ❌", false);
             return;
           }
 
@@ -135,10 +92,7 @@
           const date = dateObj.toISOString().split('T')[0];
           const time = dateObj.toTimeString().split(' ')[0];
 
-          // Send data to Google Sheets
           const scanData = {
-            scannerName: scannerName,
-            productName: productName,
             barcodeData: text,
             date: date,
             time: time
@@ -159,6 +113,9 @@
         }
       });
     }
+
+    // Start scanner immediately
+    startScanner();
   </script>
 </body>
 </html>
