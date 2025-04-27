@@ -1,1 +1,105 @@
-game taken down, time left to load 69 years snd 420 days
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Secure Barcode Scanner</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 10px;
+    }
+    #scanner {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    }
+    #status {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <h2>Secure Barcode Scanner</h2>
+
+  <div id="scanner"></div>
+
+  <div id="status"></div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.7/html5-qrcode.min.js"></script>
+
+  <script>
+    const securityPrefix = "X9COMP";
+    const scannedCodes = new Set(); // to prevent double scanning
+
+    const scanner = new Html5Qrcode("scanner");
+
+    function showStatus(message, isSuccess) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerText = message;
+      statusDiv.className = isSuccess ? 'success' : 'error';
+      statusDiv.style.display = 'block';
+
+      // Hide after 1.5 seconds
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 1500);
+    }
+
+    scanner.start(
+      { facingMode: "environment" }, // back camera
+      {
+        fps: 15,
+        qrbox: { width: 250, height: 250 },
+        disableFlip: false
+      },
+      (decodedText, decodedResult) => {
+        // Prevent multiple scans
+        if (scannedCodes.has(decodedText)) {
+          showStatus("Already Scanned ❌", false);
+          return;
+        }
+
+        // Check if security prefix matches
+        if (decodedText.startsWith(securityPrefix)) {
+          scannedCodes.add(decodedText);
+          showStatus("Scan Success ✅", true);
+
+          console.log("VALID SCAN:", decodedText); // Optional, can remove
+        } else {
+          showStatus("Invalid Code ❌", false);
+        }
+      },
+      (errorMessage) => {
+        // optional, ignore scan errors
+      }
+    ).catch(err => {
+      console.error("Failed to start scanner", err);
+    });
+  </script>
+</body>
+</html>
