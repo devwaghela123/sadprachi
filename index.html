@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Secure Inventory Scanner V2</title>
+  <title>Secure Barcode Scanner (Fixed)</title>
   <style>
     body {
       margin: 0;
@@ -16,19 +16,13 @@
     h2 {
       margin-top: 10px;
     }
-    #scannerSection {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      margin-top: 20px;
-    }
     #reader {
       width: 100%;
-      margin-top: 10px;
+      max-width: 400px;
+      margin-top: 20px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+      background: white;
     }
     #status {
       margin-top: 20px;
@@ -42,18 +36,17 @@
   </style>
 </head>
 <body>
-  <h2>Secure Inventory Scanner</h2>
+  <h2>Secure Barcode Scanner</h2>
 
-  <div id="scannerSection">
-    <div id="reader"></div>
-    <div id="status"></div>
-  </div>
+  <div id="reader"></div>
+  <div id="status"></div>
 
-  <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.7/html5-qrcode.min.js"></script>
+
   <script>
     const securityPrefix = "X9COMP";
     const scannedBarcodes = new Set();
-    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyoOG9xAJpZg2uauSq-HcEJeNnRp82735H4GPniwi67RhnEq-m2JfUxSA7bm2ehVjho/exec"; // YOUR Web App URL
+    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyoOG9xAJpZg2uauSq-HcEJeNnRp82735H4GPniwi67RhnEq-m2JfUxSA7bm2ehVjho/exec";
 
     function showStatus(message, isSuccess) {
       const statusDiv = document.getElementById('status');
@@ -66,56 +59,72 @@
       }, 1500);
     }
 
-    function startScanner() {
-      const codeReader = new ZXing.BrowserBarcodeReader();
-      console.log('Starting scanner...');
+    const html5QrCode = new Html5Qrcode("reader");
 
-      codeReader.decodeFromVideoDevice(undefined, 'reader', (result, err) => {
-        if (result) {
-          const text = result.getText();
-          console.log('Scanned:', text);
+    const config = {
+      fps: 15,
+      qrbox: { width: 250, height: 100 },
+      formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.EAN_13 ],
+      rememberLastUsedCamera: true
+    };
 
-          if (!text.startsWith(securityPrefix)) {
-            showStatus("Invalid Barcode ❌", false);
-            return;
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        let cameraId = devices[0].id; // back camera by default
+
+        html5QrCode.start(
+          cameraId,
+          config,
+          (decodedText, decodedResult) => {
+            console.log("Scanned:", decodedText);
+
+            if (!decodedText.startsWith(securityPrefix)) {
+              showStatus("Invalid Barcode ❌", false);
+              return;
+            }
+
+            if (scannedBarcodes.has(decodedText)) {
+              showStatus("Already Scanned This Session ❌", false);
+              return;
+            }
+
+            scannedBarcodes.add(decodedText);
+            showStatus("Scan Successful ✅", true);
+
+            const dateObj = new Date();
+            const date = dateObj.toISOString().split('T')[0];
+            const time = dateObj.toTimeString().split(' ')[0];
+
+            const scanData = {
+              barcodeData: decodedText,
+              date: date,
+              time: time
+            };
+
+            fetch(googleScriptURL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(scanData)
+            }).then(() => {
+              console.log('Logged to Google Sheets ✅');
+            }).catch(err => {
+              console.error('Error sending to Google Sheets ❌', err);
+            });
+          },
+          (errorMessage) => {
+            // ignore errors
           }
-
-          if (scannedBarcodes.has(text)) {
-            showStatus("Already Scanned This Session ❌", false);
-            return;
-          }
-
-          scannedBarcodes.add(text);
-          showStatus("Scan Successful ✅", true);
-
-          const dateObj = new Date();
-          const date = dateObj.toISOString().split('T')[0];
-          const time = dateObj.toTimeString().split(' ')[0];
-
-          const scanData = {
-            barcodeData: text,
-            date: date,
-            time: time
-          };
-
-          fetch(googleScriptURL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(scanData)
-          }).then(() => {
-            console.log('Logged to Google Sheets ✅');
-          }).catch(err => {
-            console.error('Error sending to Google Sheets ❌', err);
-          });
-        }
-      });
-    }
-
-    // Start scanner immediately
-    startScanner();
+        );
+      } else {
+        alert("No camera found on this device ❌");
+      }
+    }).catch(err => {
+      console.error('Camera Access Error:', err);
+      alert("Camera access issue ❌");
+    });
   </script>
 </body>
 </html>
